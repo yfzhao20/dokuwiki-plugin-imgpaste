@@ -42,11 +42,16 @@
             const item = items[index];
 
             if (item.kind === 'file') {
+
+                // attemp to get original file name
+                const file = item.getAsFile();
+                const originalName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "";
+
                 const reader = new FileReader();
                 reader.onload = event => {
-                    uploadData(event.target.result);
+                    uploadData(event.target.result, originalName);
                 };
-                reader.readAsDataURL(item.getAsFile());
+                reader.readAsDataURL(file);
 
                 // we had at least one file, prevent default
                 e.preventDefault();
@@ -179,15 +184,17 @@
      * Uploads the given dataURL to the server and displays a progress dialog, inserting the syntax on success
      *
      * @param {string} dataURL
+     * @param {string} suggestedName Optional name from the original file
      */
-    async function uploadData(dataURL) {
+    async function uploadData(dataURL, suggestedName = "") {
         let name = "";
         
         // Determine if renaming prompt should be shown
         const showPrompt = (typeof plugin_imgpaste_show_prompt !== 'undefined') && (String(plugin_imgpaste_show_prompt) === '1');
         
         if (showPrompt) {
-            name = window.prompt("Enter image name (leave empty for default):", "");
+            // Use suggestedName (if any) as the default value in the prompt
+            name = window.prompt("Enter image name (leave empty for default):", suggestedName);
             if (name === null) return; // Abort upload if user cancels
         }
 
